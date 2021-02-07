@@ -148,19 +148,24 @@ export default {
       //shuffle array
       mainArray = this.$helpers.shuffle(mainArray);
       //divide into 2 halves
-      const half = Math.round(length/2);
+      const half = Math.round(mainArray.length/2);
       const firstHalf = mainArray.splice(0, half);
       const secondHalf = mainArray.splice(-half);
       //take 1st half & convert 1D to 2D array
-      const newArr = [];
-      console.log({firstHalf})
-      while(firstHalf.length) {
-        newArr.push(firstHalf.splice(0, 5))
-      }
-      console.log(newArr)
-
+      let newArr = this.$helpers.matrixify(firstHalf);
+      //generate bingo rows from the 2D array
+      newArr = newArr.map(row => this.generateRow(row));
+      //generate board data structure
+      this.board = newArr.map(row => {
+        return row = row.map(cell => {
+          return {num: cell, tick: false};
+        })
+      })
     },
-    generateRow() {}
+    generateRow(row) {
+      const emptyTiles = new Array(4).fill(-1);
+      return this.$helpers.shuffle([...emptyTiles, ...row]);
+    }
   }
 };
 </script>

@@ -13,6 +13,13 @@ export const helpers = {
       shuffleArr[randomIndex] = temporaryValue;
     }
     return shuffleArr;
+  },
+  matrixify: function(array) {
+    const newArr = [];
+    while(array.length) {
+      newArr.push(array.splice(0, 5))
+    }
+    return newArr;
   }
 };
 

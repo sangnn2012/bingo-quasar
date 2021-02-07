@@ -14,6 +14,9 @@
 <script>
 export default {
   name: "Tile",
+  // mounted() {
+  //   console.log({num, tick})
+  // }
   props: {
     num: {
       type: Number,
