@@ -18,7 +18,6 @@
           @onTileClicked="onTileClicked(rowIndex, cellIndex)"
         ></tile>
       </div>
-      <!-- <tile v-for="cell of row" :num="cell.num" :tick="cell.tick"></tile> -->
     </div>
   </q-page>
 </template>
@@ -144,8 +143,24 @@ export default {
         .tick;
     },
     generateBoard() {
+      //create an array from 1-90
+      let mainArray = [...Array(90).keys()].map(num => ++num);
+      //shuffle array
+      mainArray = this.$helpers.shuffle(mainArray);
+      //divide into 2 halves
+      const half = Math.round(length/2);
+      const firstHalf = mainArray.splice(0, half);
+      const secondHalf = mainArray.splice(-half);
+      //take 1st half & convert 1D to 2D array
+      const newArr = [];
+      console.log({firstHalf})
+      while(firstHalf.length) {
+        newArr.push(firstHalf.splice(0, 5))
+      }
+      console.log(newArr)
 
-    }
+    },
+    generateRow() {}
   }
 };
 </script>
