@@ -76,6 +76,7 @@ export default {
     width: 100%;
     top: 10%;
     left: 0;
+    opacity: 0.8;
   }
 }
 </style>
