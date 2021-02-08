@@ -1,13 +1,14 @@
 <template>
   <div
     class="tile flex flex-center"
+    :style='num=== -1 ? `background-color:${mainColor}` : ""'
     :class="num !== -1 ? 'hasNum' : ''"
     @click="$emit('onTileClicked')"
   >
     <div class="num" :class="num !== -1 ? 'hasNum' : ''">
       {{ num }}
     </div>
-    <q-icon v-show="tick && num !== -1" class="tick" name="done"/>
+    <q-icon v-show="tick && num !== -1" class="tick" :name="mainIcon"/>
   </div>
 </template>
 
@@ -25,7 +26,9 @@ export default {
     tick: {
       type: Boolean,
       default: false
-    }
+    },
+    mainColor: String,
+    mainIcon: String
   },
   data() {
     return {};
@@ -51,7 +54,7 @@ export default {
   justify-content: center;
   align-items: center;
   padding: 5px;
-  background-color: #fa86c4;
+  // background-color: #fa86c4;
   pointer-events: none;
   &.hasNum {
     background-color: white;
