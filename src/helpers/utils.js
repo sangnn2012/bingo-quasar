@@ -14,12 +14,16 @@ export const helpers = {
     }
     return shuffleArr;
   },
-  matrixify: function(array) {
+  matrixify: function(array, rowNum) {
+    let tempArr = JSON.parse(JSON.stringify(array));
     const newArr = [];
-    while(array.length) {
-      newArr.push(array.splice(0, 5))
+    while(tempArr.length) {
+      newArr.push(tempArr.splice(0, rowNum))
     }
     return newArr;
+  },
+  transpose: function(array) {
+    return array[0].map((x,i) => array.map(x => x[i]));
   }
 };
 
