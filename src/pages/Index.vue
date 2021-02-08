@@ -19,6 +19,9 @@
         ></tile>
       </div>
     </div>
+    <div class="game-wrapper__footer">
+      Chúc các bạn CT năm mới vui vẻ - Sang.
+    </div>
   </q-page>
 </template>
 
@@ -192,6 +195,11 @@ export default {
         margin-bottom: 20px;
       }
     }
+  }
+  &__footer {
+    font-size: 12px;
+    color: gray;
+    text-align: center;
   }
 }
 </style>
