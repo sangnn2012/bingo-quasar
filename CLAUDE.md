@@ -40,10 +40,9 @@ Key exports:
 
 ```
 src/
-├── pages/Index.vue      # Main game page with color/icon picker dialog
+├── pages/Index.vue       # Main game page with color/icon picker dialog
 ├── components/
-│   ├── Tile/Index.vue   # Individual cell (handles display + click to mark)
-│   └── Board/Index.vue  # Board wrapper (unused, game renders directly)
+│   └── Tile/Index.vue    # Individual cell (handles display + click to mark)
 ├── helpers/
 │   └── boardGenerator.js # Algorithm + boardGenerator.test.js
 └── layouts/MainLayout.vue

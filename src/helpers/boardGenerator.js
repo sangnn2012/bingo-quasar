@@ -73,19 +73,10 @@ export function splitPoolsBetweenBoards(pools) {
   const board1Pools = [];
   const board2Pools = [];
 
-  pools.forEach((pool, colIndex) => {
+  pools.forEach(pool => {
     const shuffled = shuffle(pool);
-
-    if (colIndex === 0) {
-      board1Pools.push(shuffled.slice(0, 5));
-      board2Pools.push(shuffled.slice(5));
-    } else if (colIndex === 8) {
-      board1Pools.push(shuffled.slice(0, 5));
-      board2Pools.push(shuffled.slice(5));
-    } else {
-      board1Pools.push(shuffled.slice(0, 5));
-      board2Pools.push(shuffled.slice(5));
-    }
+    board1Pools.push(shuffled.slice(0, 5));
+    board2Pools.push(shuffled.slice(5));
   });
 
   return { board1Pools, board2Pools };
