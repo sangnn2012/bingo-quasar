@@ -74,6 +74,9 @@ src/
 ├── helpers/
 │   ├── boardGenerator.ts    # Board generation algorithm
 │   └── boardGenerator.test.ts
+├── router/
+│   ├── index.ts             # Router configuration
+│   └── routes.ts            # Route definitions
 ├── types/
 │   └── index.ts             # TypeScript type definitions
 └── layouts/MainLayout.vue
