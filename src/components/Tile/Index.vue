@@ -1,37 +1,35 @@
 <template>
   <div
     class="tile flex flex-center"
-    :style='num=== -1 ? `background-color:${mainColor}` : ""'
+    :style="num === -1 ? `background-color:${mainColor}` : ''"
     :class="num !== -1 ? 'hasNum' : ''"
-    @click="$emit('onTileClicked')"
+    @click="emit('onTileClicked')"
   >
     <div class="num" :class="num !== -1 ? 'hasNum' : ''">
       {{ num }}
     </div>
-    <q-icon v-show="tick && num !== -1" class="tick" :name="mainIcon"/>
+    <q-icon v-show="tick && num !== -1" class="tick" :name="mainIcon" />
   </div>
 </template>
 
-<script>
-export default {
-  name: "Tile",
-  emits: ['onTileClicked'],
-  props: {
-    num: {
-      type: Number,
-      default: -1
-    },
-    tick: {
-      type: Boolean,
-      default: false
-    },
-    mainColor: String,
-    mainIcon: String
-  },
-  data() {
-    return {};
-  }
-};
+<script setup lang="ts">
+interface Props {
+  num?: number;
+  tick?: boolean;
+  mainColor?: string;
+  mainIcon?: string;
+}
+
+withDefaults(defineProps<Props>(), {
+  num: -1,
+  tick: false,
+  mainColor: '',
+  mainIcon: '',
+});
+
+const emit = defineEmits<{
+  onTileClicked: [];
+}>();
 </script>
 
 <style lang="scss">

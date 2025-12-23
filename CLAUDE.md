@@ -4,21 +4,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Vietnamese Lô Tô (Bingo) game built with Quasar Framework (Vue 3) and Vite. The game generates two complementary bingo boards that together use all 90 numbers (1-90).
+Vietnamese Lô Tô (Bingo) game built with Quasar Framework (Vue 3), Vite, and TypeScript. The game generates two complementary bingo boards that together use all 90 numbers (1-90).
 
 ## Commands
 
 ```bash
-npm run dev       # Start dev server with hot reload (opens browser)
-npm run build     # Production build to dist/spa
-npm run lint      # Lint src/ files
-npm run test      # Run tests once
-npm run test:watch # Run tests in watch mode
+npm run dev          # Start dev server with hot reload (opens browser)
+npm run build        # Type-check and production build to dist/spa
+npm run lint         # Lint .ts, .js, .vue files
+npm run lint:fix     # Lint and auto-fix issues
+npm run format       # Format code with Prettier
+npm run format:check # Check formatting without changes
+npm run test         # Run tests once
+npm run test:watch   # Run tests in watch mode
 ```
+
+## Tech Stack
+
+- **Vue 3** with Composition API (`<script setup lang="ts">`)
+- **TypeScript** with strict mode
+- **Quasar Framework** v2 (UI components)
+- **Vite** for build tooling
+- **Vitest** for testing
+- **ESLint + Prettier** for linting/formatting
+- **Husky + lint-staged** for pre-commit hooks
 
 ## Architecture
 
-### Board Generation Algorithm (`src/helpers/boardGenerator.js`)
+### Board Generation Algorithm (`src/helpers/boardGenerator.ts`)
 
 The core algorithm generates valid Lô Tô boards using backtracking:
 
@@ -32,25 +45,43 @@ The core algorithm generates valid Lô Tô boards using backtracking:
 - **Guaranteed valid**: Uses backtracking with pre-computed valid patterns (no retries needed)
 
 Key exports:
+
 - `generateBoards()` - Returns `{ board1, board2, isValid }` with complete game state
 - `EMPTY = -1` - Sentinel value for blank cells
-- Board cells are `{ num: number, tick: boolean }` objects
+
+### Types (`src/types/index.ts`)
+
+```typescript
+interface BoardCell {
+  num: number;
+  tick: boolean;
+}
+type Board = BoardCell[][];
+interface GenerateBoardsResult {
+  board1: Board;
+  board2: Board;
+  isValid: boolean;
+}
+```
 
 ### Component Structure
 
 ```
 src/
-├── pages/Index.vue       # Main game page with color/icon picker dialog
+├── pages/Index.vue          # Main game page with color/icon picker dialog
 ├── components/
-│   └── Tile/Index.vue    # Individual cell (handles display + click to mark)
+│   └── Tile/Index.vue       # Individual cell (handles display + click to mark)
 ├── helpers/
-│   └── boardGenerator.js # Algorithm + boardGenerator.test.js
+│   ├── boardGenerator.ts    # Board generation algorithm
+│   └── boardGenerator.test.ts
+├── types/
+│   └── index.ts             # TypeScript type definitions
 └── layouts/MainLayout.vue
 ```
 
 ### Game State
 
-- `board1`, `board2`: 9×9 arrays of `{ num, tick }` cells
+- `board1`, `board2`: 9×9 arrays of `BoardCell` objects
 - `mainColor`: Background color for empty cells
 - `mainIcon`: Material icon name for marked cells
 - Clicking a numbered tile toggles its `tick` state

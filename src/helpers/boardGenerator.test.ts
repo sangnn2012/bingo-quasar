@@ -12,8 +12,8 @@ import {
   NUMBERS_PER_ROW,
   TOTAL_ROWS,
   TOTAL_COLS,
-  TOTAL_NUMBERS
-} from './boardGenerator.js';
+  TOTAL_NUMBERS,
+} from './boardGenerator';
 
 describe('getColumnForNumber', () => {
   it('should return correct column for numbers 1-9', () => {
@@ -50,7 +50,7 @@ describe('shuffle', () => {
   it('should contain all original elements', () => {
     const arr = [1, 2, 3, 4, 5];
     const shuffled = shuffle(arr);
-    arr.forEach(num => expect(shuffled).toContain(num));
+    arr.forEach((num) => expect(shuffled).toContain(num));
   });
 
   it('should not modify original array', () => {
@@ -69,7 +69,7 @@ describe('createColumnPools', () => {
 
   it('should have correct number of elements per pool', () => {
     const pools = createColumnPools();
-    expect(pools[0].length).toBe(9);  // 1-9
+    expect(pools[0].length).toBe(9); // 1-9
     for (let i = 1; i <= 7; i++) {
       expect(pools[i].length).toBe(10); // 10-19, 20-29, ..., 70-79
     }
@@ -113,7 +113,7 @@ describe('splitPoolsBetweenBoards', () => {
     const board1Numbers = new Set(board1Pools.flat());
     const board2Numbers = new Set(board2Pools.flat());
 
-    board1Numbers.forEach(num => {
+    board1Numbers.forEach((num) => {
       expect(board2Numbers.has(num)).toBe(false);
     });
   });
@@ -126,13 +126,13 @@ describe('generateSingleBoard', () => {
   it('should create a 9x9 board', () => {
     const board = generateSingleBoard(board1Pools);
     expect(board.length).toBe(TOTAL_ROWS);
-    board.forEach(row => expect(row.length).toBe(TOTAL_COLS));
+    board.forEach((row) => expect(row.length).toBe(TOTAL_COLS));
   });
 
   it('should have exactly 5 numbers per row', () => {
     const board = generateSingleBoard(board1Pools);
-    board.forEach(row => {
-      const numberCount = row.filter(cell => cell.num !== EMPTY).length;
+    board.forEach((row) => {
+      const numberCount = row.filter((cell) => cell.num !== EMPTY).length;
       expect(numberCount).toBe(NUMBERS_PER_ROW);
     });
   });
@@ -144,9 +144,9 @@ describe('generateSingleBoard', () => {
       const { board1Pools: testPools } = splitPoolsBetweenBoards(freshPools);
       const board = generateSingleBoard(testPools);
 
-      board.forEach((row, rowIdx) => {
+      board.forEach((row) => {
         let consecutive = 0;
-        row.forEach(cell => {
+        row.forEach((cell) => {
           if (cell.num === EMPTY) {
             consecutive++;
             expect(consecutive).toBeLessThanOrEqual(3);
@@ -160,7 +160,7 @@ describe('generateSingleBoard', () => {
 
   it('should place numbers in correct columns', () => {
     const board = generateSingleBoard(board1Pools);
-    board.forEach(row => {
+    board.forEach((row) => {
       row.forEach((cell, colIdx) => {
         if (cell.num !== EMPTY) {
           expect(getColumnForNumber(cell.num)).toBe(colIdx);
@@ -178,7 +178,7 @@ describe('sortColumnsWithinSections', () => {
     board = sortColumnsWithinSections(board);
 
     for (let col = 0; col < TOTAL_COLS; col++) {
-      const numbersInCol = [];
+      const numbersInCol: number[] = [];
       for (let row = 0; row < TOTAL_ROWS; row++) {
         if (board[row][col].num !== EMPTY) {
           numbersInCol.push(board[row][col].num);
@@ -219,11 +219,11 @@ describe('generateBoards', () => {
 
   it('should use all 90 numbers across both boards', () => {
     const { board1, board2 } = generateBoards();
-    const allNumbers = new Set();
+    const allNumbers = new Set<number>();
 
-    [board1, board2].forEach(board => {
-      board.forEach(row => {
-        row.forEach(cell => {
+    [board1, board2].forEach((board) => {
+      board.forEach((row) => {
+        row.forEach((cell) => {
           if (cell.num !== EMPTY) {
             allNumbers.add(cell.num);
           }
@@ -236,22 +236,22 @@ describe('generateBoards', () => {
 
   it('should not have duplicate numbers between boards', () => {
     const { board1, board2 } = generateBoards();
-    const board1Numbers = new Set();
-    const board2Numbers = new Set();
+    const board1Numbers = new Set<number>();
+    const board2Numbers = new Set<number>();
 
-    board1.forEach(row => {
-      row.forEach(cell => {
+    board1.forEach((row) => {
+      row.forEach((cell) => {
         if (cell.num !== EMPTY) board1Numbers.add(cell.num);
       });
     });
 
-    board2.forEach(row => {
-      row.forEach(cell => {
+    board2.forEach((row) => {
+      row.forEach((cell) => {
         if (cell.num !== EMPTY) board2Numbers.add(cell.num);
       });
     });
 
-    board1Numbers.forEach(num => {
+    board1Numbers.forEach((num) => {
       expect(board2Numbers.has(num)).toBe(false);
     });
   });
@@ -259,9 +259,9 @@ describe('generateBoards', () => {
   it('should have columns sorted ascending', () => {
     const { board1, board2 } = generateBoards();
 
-    [board1, board2].forEach(board => {
+    [board1, board2].forEach((board) => {
       for (let col = 0; col < TOTAL_COLS; col++) {
-        const nums = [];
+        const nums: number[] = [];
         for (let row = 0; row < TOTAL_ROWS; row++) {
           if (board[row][col].num !== EMPTY) {
             nums.push(board[row][col].num);
@@ -278,10 +278,10 @@ describe('generateBoards', () => {
     for (let test = 0; test < 10; test++) {
       const { board1, board2 } = generateBoards();
 
-      [board1, board2].forEach(board => {
-        board.forEach(row => {
+      [board1, board2].forEach((board) => {
+        board.forEach((row) => {
           let consecutive = 0;
-          row.forEach(cell => {
+          row.forEach((cell) => {
             if (cell.num === EMPTY) {
               consecutive++;
               expect(consecutive).toBeLessThanOrEqual(3);

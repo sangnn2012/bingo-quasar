@@ -1,36 +1,31 @@
 <template>
   <q-page class="game-wrapper q-ma-md">
-    <div class="game-wrapper__title">
-      Chào mừng mấy con giời đến với Lô tô 2021
-    </div>
+    <div class="game-wrapper__title">Chào mừng mấy con giời đến với Lô tô 2021</div>
     <div class="fullwidth text-center">
       <q-btn
-        @click="isIntroModal = true"
         color="primary"
         label="Chọn lại màu và icon"
         class="q-ma-lg"
+        @click="isIntroModal = true"
       />
-
-
     </div>
     <div class="game-wrapper__main">
       <div class="board-label">Vé 1</div>
       <div
-        class="row"
-        :class="(rowIndex + 1) % 3 === 0 ? 'endOfSection' : ''"
         v-for="(row, rowIndex) of board1"
         :key="'row' + rowIndex + 'board1'"
+        class="row"
+        :class="(rowIndex + 1) % 3 === 0 ? 'endOfSection' : ''"
       >
-        <tile
+        <Tile
           v-for="(cell, cellIndex) of row"
           :key="'cell' + rowIndex + cellIndex"
           :num="cell.num"
           :tick="cell.tick"
-          @onTileClicked="onTileClicked(board1, rowIndex, cellIndex)"
-          :mainColor="mainColor"
-          :mainIcon="mainIcon"
-        >
-        </tile>
+          :main-color="mainColor"
+          :main-icon="mainIcon"
+          @on-tile-clicked="onTileClicked(board1, rowIndex, cellIndex)"
+        />
       </div>
 
       <div class="board-separator">
@@ -40,30 +35,27 @@
       </div>
 
       <div
-        class="row"
-        :class="(rowIndex + 1) % 3 === 0 ? 'endOfSection' : ''"
         v-for="(row, rowIndex) of board2"
         :key="'row' + rowIndex + 'board2'"
+        class="row"
+        :class="(rowIndex + 1) % 3 === 0 ? 'endOfSection' : ''"
       >
-        <tile
+        <Tile
           v-for="(cell, cellIndex) of row"
           :key="'cell' + rowIndex + cellIndex"
           :num="cell.num"
           :tick="cell.tick"
-          @onTileClicked="onTileClicked(board2, rowIndex, cellIndex)"
-          :mainColor="mainColor"
-          :mainIcon="mainIcon"
-        >
-        </tile>
+          :main-color="mainColor"
+          :main-icon="mainIcon"
+          @on-tile-clicked="onTileClicked(board2, rowIndex, cellIndex)"
+        />
       </div>
     </div>
-    <div class="game-wrapper__footer">
-      Chúc các bạn CT năm mới vui vẻ - Sang.
-    </div>
+    <div class="game-wrapper__footer">Chúc các bạn CT năm mới vui vẻ - Sang.</div>
 
     <q-dialog
-      class="game-wrapper__pickers"
       v-model="isIntroModal"
+      class="game-wrapper__pickers"
       persistent
       transition-show="scale"
       transition-hide="scale"
@@ -71,9 +63,7 @@
       <q-card class="picker-dialog">
         <!-- Header -->
         <q-card-section class="picker-dialog__header">
-          <div class="text-h5 text-weight-bold text-center">
-            Tùy chỉnh giao diện
-          </div>
+          <div class="text-h5 text-weight-bold text-center">Tùy chỉnh giao diện</div>
           <div class="text-subtitle2 text-grey-7 text-center q-mt-sm">
             Chọn màu nền cho ô trống và icon đánh dấu
           </div>
@@ -98,10 +88,7 @@
                   <!-- Current Color Preview -->
                   <div class="color-preview-wrapper q-mb-md">
                     <div class="text-caption text-grey-7 q-mb-xs">Màu đang chọn</div>
-                    <div
-                      class="color-preview"
-                      :style="`background-color: ${mainColor}`"
-                    ></div>
+                    <div class="color-preview" :style="`background-color: ${mainColor}`"></div>
                   </div>
 
                   <!-- Color Picker -->
@@ -131,11 +118,7 @@
                   <div class="icon-preview-wrapper q-mb-lg">
                     <div class="text-caption text-grey-7 q-mb-xs">Icon đang chọn</div>
                     <div class="icon-preview" :style="`border-color: ${mainColor}`">
-                      <q-icon
-                        :name="mainIcon"
-                        :style="`color: ${mainColor}`"
-                        size="42px"
-                      />
+                      <q-icon :name="mainIcon" :style="`color: ${mainColor}`" size="42px" />
                     </div>
                   </div>
 
@@ -176,7 +159,10 @@
                 </div>
                 <div class="preview-tiles">
                   <!-- Empty tile preview -->
-                  <div class="preview-tile preview-tile--empty" :style="`background-color: ${mainColor}`">
+                  <div
+                    class="preview-tile preview-tile--empty"
+                    :style="`background-color: ${mainColor}`"
+                  >
                     <span class="preview-tile__label">Ô trống</span>
                   </div>
 
@@ -207,13 +193,13 @@
         <!-- Footer with Action Button -->
         <q-card-actions align="center" class="q-pa-md">
           <q-btn
-            @click="isIntroModal = false"
             color="primary"
             label="Bắt đầu chơi"
             size="lg"
             unelevated
             class="start-btn"
             icon-right="play_arrow"
+            @click="isIntroModal = false"
           />
         </q-card-actions>
       </q-card>
@@ -221,64 +207,46 @@
   </q-page>
 </template>
 
-<script>
-import Tile from "src/components/Tile/Index.vue";
-import { generateBoards, EMPTY } from "src/helpers/boardGenerator.js";
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import Tile from 'src/components/Tile/Index.vue';
+import { generateBoards } from 'src/helpers/boardGenerator';
+import type { Board } from 'src/types';
 
-export default {
-  name: "PageIndex",
-  components: {
-    Tile
-  },
+// UI settings
+const iconList = ['done', 'pets', 'eco', 'bolt', 'clear', 'sentiment_neutral'];
+const mainIcon = ref('done');
+const mainColor = ref('#fa86c4');
+const isIntroModal = ref(true);
 
-  mounted() {
-    this.initializeBoards();
-  },
+// Game boards
+const board1 = ref<Board>([]);
+const board2 = ref<Board>([]);
 
-  data() {
-    return {
-      // UI settings
-      iconList: ["done", "pets", "eco", "bolt", "clear", "sentiment_neutral"],
-      mainIcon: "done",
-      mainColor: "#fa86c4",
-      isIntroModal: true,
+/**
+ * Initialize both game boards using the deterministic algorithm
+ */
+function initializeBoards(): void {
+  const result = generateBoards();
 
-      // Game boards (initialized empty, populated in mounted)
-      board1: [],
-      board2: []
-    };
-  },
-
-  methods: {
-    /**
-     * Initialize both game boards using the deterministic algorithm
-     */
-    initializeBoards() {
-      const { board1, board2, isValid } = generateBoards();
-
-      if (!isValid) {
-        console.warn("Board generation produced invalid boards");
-      }
-
-      this.board1 = board1;
-      this.board2 = board2;
-    },
-
-    /**
-     * Handle tile click - toggle the tick state
-     */
-    onTileClicked(board, rowIndex, cellIndex) {
-      board[rowIndex][cellIndex].tick = !board[rowIndex][cellIndex].tick;
-    },
-
-    /**
-     * Regenerate new boards (called from UI button)
-     */
-    regenerateBoards() {
-      this.initializeBoards();
-    }
+  if (!result.isValid) {
+    console.warn('Board generation produced invalid boards');
   }
-};
+
+  board1.value = result.board1;
+  board2.value = result.board2;
+}
+
+/**
+ * Handle tile click - toggle the tick state
+ */
+function onTileClicked(board: Board, rowIndex: number, cellIndex: number): void {
+  board[rowIndex][cellIndex].tick = !board[rowIndex][cellIndex].tick;
+}
+
+onMounted(() => {
+  initializeBoards();
+});
 </script>
 
 <style lang="scss">
@@ -426,7 +394,9 @@ export default {
   height: 60px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 
   &:hover {
     transform: scale(1.05);

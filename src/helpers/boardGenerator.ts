@@ -18,6 +18,8 @@
  * without needing retries or validation.
  */
 
+import type { Board, BoardCell, GenerateBoardsResult } from '../types';
+
 // Constants
 export const EMPTY = -1;
 export const NUMBERS_PER_ROW = 5;
@@ -26,12 +28,13 @@ export const TOTAL_COLS = 9;
 export const TOTAL_NUMBERS = 90;
 const MAX_CONSECUTIVE_BLANKS = 3;
 
+type ColumnPools = number[][];
+type Pattern = number[];
+
 /**
  * Get the column index for a given number (0-8)
- * @param {number} num - Number between 1-90
- * @returns {number} Column index (0-8)
  */
-export function getColumnForNumber(num) {
+export function getColumnForNumber(num: number): number {
   if (num <= 0 || num > TOTAL_NUMBERS) return -1;
   if (num <= 9) return 0;
   if (num >= 80) return 8;
@@ -40,10 +43,8 @@ export function getColumnForNumber(num) {
 
 /**
  * Fisher-Yates shuffle algorithm
- * @param {Array} array - Array to shuffle
- * @returns {Array} New shuffled array
  */
-export function shuffle(array) {
+export function shuffle<T>(array: T[]): T[] {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -54,10 +55,9 @@ export function shuffle(array) {
 
 /**
  * Create number pools grouped by column
- * @returns {Array<Array<number>>} Array of 9 arrays, each containing numbers for that column
  */
-export function createColumnPools() {
-  const pools = Array.from({ length: TOTAL_COLS }, () => []);
+export function createColumnPools(): ColumnPools {
+  const pools: ColumnPools = Array.from({ length: TOTAL_COLS }, () => []);
   for (let num = 1; num <= TOTAL_NUMBERS; num++) {
     pools[getColumnForNumber(num)].push(num);
   }
@@ -66,14 +66,15 @@ export function createColumnPools() {
 
 /**
  * Split column pools between two boards
- * @param {Array<Array<number>>} pools - Column pools (9 arrays)
- * @returns {{ board1Pools: Array, board2Pools: Array }}
  */
-export function splitPoolsBetweenBoards(pools) {
-  const board1Pools = [];
-  const board2Pools = [];
+export function splitPoolsBetweenBoards(pools: ColumnPools): {
+  board1Pools: ColumnPools;
+  board2Pools: ColumnPools;
+} {
+  const board1Pools: ColumnPools = [];
+  const board2Pools: ColumnPools = [];
 
-  pools.forEach(pool => {
+  pools.forEach((pool) => {
     const shuffled = shuffle(pool);
     board1Pools.push(shuffled.slice(0, 5));
     board2Pools.push(shuffled.slice(5));
@@ -84,10 +85,8 @@ export function splitPoolsBetweenBoards(pools) {
 
 /**
  * Check if a column pattern has 4+ consecutive blanks
- * @param {Array<number>} columns - Selected column indices (length 5)
- * @returns {boolean} True if pattern is valid (no 4+ consecutive blanks)
  */
-function isValidPattern(columns) {
+function isValidPattern(columns: Pattern): boolean {
   const filled = new Set(columns);
   let consecutive = 0;
 
@@ -106,10 +105,9 @@ function isValidPattern(columns) {
 
 /**
  * Generate all valid 5-column patterns (no 4+ consecutive blanks)
- * @returns {Array<Array<number>>} Array of valid column patterns
  */
-function generateValidPatterns() {
-  const patterns = [];
+function generateValidPatterns(): Pattern[] {
+  const patterns: Pattern[] = [];
 
   // Generate all C(9,5) = 126 combinations
   for (let a = 0; a < 5; a++) {
@@ -117,7 +115,7 @@ function generateValidPatterns() {
       for (let c = b + 1; c < 7; c++) {
         for (let d = c + 1; d < 8; d++) {
           for (let e = d + 1; e < 9; e++) {
-            const pattern = [a, b, c, d, e];
+            const pattern: Pattern = [a, b, c, d, e];
             if (isValidPattern(pattern)) {
               patterns.push(pattern);
             }
@@ -135,12 +133,8 @@ const VALID_PATTERNS = generateValidPatterns();
 
 /**
  * Check if a pattern is feasible given current column counts
- * @param {Array<number>} pattern - Column pattern to check
- * @param {Array<number>} remaining - Remaining count per column
- * @param {number} rowsLeft - Rows remaining to fill
- * @returns {boolean} True if pattern is feasible
  */
-function isPatternFeasible(pattern, remaining, rowsLeft) {
+function isPatternFeasible(pattern: Pattern, remaining: number[], rowsLeft: number): boolean {
   const patternSet = new Set(pattern);
 
   for (let col = 0; col < TOTAL_COLS; col++) {
@@ -160,23 +154,18 @@ function isPatternFeasible(pattern, remaining, rowsLeft) {
 /**
  * Generate a single board using backtracking algorithm
  * Guarantees valid board with no 4+ consecutive blanks
- *
- * @param {Array<Array<number>>} columnPools - Numbers available per column
- * @returns {Array<Array<{num: number, tick: boolean}>>} 9x9 board
  */
-export function generateSingleBoard(columnPools) {
-  const pools = columnPools.map(pool => [...pool]);
-  const remaining = pools.map(pool => pool.length);
+export function generateSingleBoard(columnPools: ColumnPools): Board {
+  const pools = columnPools.map((pool) => [...pool]);
+  const remaining = pools.map((pool) => pool.length);
 
   // Board state: which columns are filled for each row
-  const rowPatterns = new Array(TOTAL_ROWS).fill(null);
+  const rowPatterns: (Pattern | null)[] = new Array(TOTAL_ROWS).fill(null);
 
   /**
    * Backtracking solver
-   * @param {number} row - Current row to fill
-   * @returns {boolean} True if solution found
    */
-  function solve(row) {
+  function solve(row: number): boolean {
     if (row === TOTAL_ROWS) {
       // All rows filled successfully
       return true;
@@ -185,7 +174,7 @@ export function generateSingleBoard(columnPools) {
     const rowsLeft = TOTAL_ROWS - row;
 
     // Get feasible patterns for this row
-    const feasiblePatterns = VALID_PATTERNS.filter(pattern =>
+    const feasiblePatterns = VALID_PATTERNS.filter((pattern) =>
       isPatternFeasible(pattern, remaining, rowsLeft)
     );
 
@@ -223,14 +212,19 @@ export function generateSingleBoard(columnPools) {
   }
 
   // Build the board from patterns
-  const board = Array.from({ length: TOTAL_ROWS }, () =>
-    Array.from({ length: TOTAL_COLS }, () => ({ num: EMPTY, tick: false }))
+  const board: Board = Array.from({ length: TOTAL_ROWS }, () =>
+    Array.from({ length: TOTAL_COLS }, (): BoardCell => ({ num: EMPTY, tick: false }))
   );
 
   for (let row = 0; row < TOTAL_ROWS; row++) {
-    for (const col of rowPatterns[row]) {
-      const num = pools[col].pop();
-      board[row][col] = { num, tick: false };
+    const pattern = rowPatterns[row];
+    if (pattern) {
+      for (const col of pattern) {
+        const num = pools[col].pop();
+        if (num !== undefined) {
+          board[row][col] = { num, tick: false };
+        }
+      }
     }
   }
 
@@ -239,23 +233,21 @@ export function generateSingleBoard(columnPools) {
 
 /**
  * Sort numbers within each column across the entire board (ascending top to bottom)
- * @param {Array<Array<{num: number, tick: boolean}>>} board - Board to sort
- * @returns {Array<Array<{num: number, tick: boolean}>>} Sorted board
  */
-export function sortColumnsWithinSections(board) {
+export function sortColumnsWithinSections(board: Board): Board {
   for (let col = 0; col < TOTAL_COLS; col++) {
-    const numbersInColumn = [];
+    const numbersInColumn: { num: number; row: number }[] = [];
     for (let row = 0; row < TOTAL_ROWS; row++) {
       if (board[row][col].num !== EMPTY) {
         numbersInColumn.push({
           num: board[row][col].num,
-          row: row
+          row: row,
         });
       }
     }
 
     numbersInColumn.sort((a, b) => a.num - b.num);
-    const rowPositions = numbersInColumn.map(item => item.row).sort((a, b) => a - b);
+    const rowPositions = numbersInColumn.map((item) => item.row).sort((a, b) => a - b);
 
     for (let i = 0; i < numbersInColumn.length; i++) {
       board[rowPositions[i]][col].num = numbersInColumn[i].num;
@@ -267,12 +259,10 @@ export function sortColumnsWithinSections(board) {
 
 /**
  * Validate that a board has exactly 5 numbers per row
- * @param {Array<Array<{num: number}>>} board - Board to validate
- * @returns {boolean} True if valid
  */
-export function validateBoard(board) {
+export function validateBoard(board: Board): boolean {
   for (let row = 0; row < board.length; row++) {
-    const count = board[row].filter(cell => cell.num !== EMPTY).length;
+    const count = board[row].filter((cell) => cell.num !== EMPTY).length;
     if (count !== NUMBERS_PER_ROW) {
       return false;
     }
@@ -282,11 +272,10 @@ export function validateBoard(board) {
 
 /**
  * Generate both Lô Tô boards (guaranteed valid, no retries needed)
- * @returns {{ board1: Array, board2: Array, isValid: boolean }}
  */
-export function generateBoards() {
+export function generateBoards(): GenerateBoardsResult {
   // Step 1: Create column pools and shuffle
-  const pools = createColumnPools().map(pool => shuffle(pool));
+  const pools = createColumnPools().map((pool) => shuffle(pool));
 
   // Step 2: Split pools between boards
   const { board1Pools, board2Pools } = splitPoolsBetweenBoards(pools);
