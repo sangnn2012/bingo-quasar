@@ -137,35 +137,25 @@ describe('generateSingleBoard', () => {
     });
   });
 
-  it('should attempt to avoid 4+ consecutive blanks (best effort)', () => {
-    // This test verifies the function tries to avoid consecutive blanks
-    // The hard guarantee is at generateBoards level with retries
-    let successCount = 0;
-    const trials = 10;
-
-    for (let i = 0; i < trials; i++) {
+  it('should guarantee no 4+ consecutive blanks in any row', () => {
+    // Backtracking algorithm guarantees valid boards every time
+    for (let i = 0; i < 20; i++) {
       const freshPools = createColumnPools();
       const { board1Pools: testPools } = splitPoolsBetweenBoards(freshPools);
       const board = generateSingleBoard(testPools);
 
-      let hasIssue = false;
-      board.forEach(row => {
+      board.forEach((row, rowIdx) => {
         let consecutive = 0;
         row.forEach(cell => {
           if (cell.num === EMPTY) {
             consecutive++;
-            if (consecutive > 3) hasIssue = true;
+            expect(consecutive).toBeLessThanOrEqual(3);
           } else {
             consecutive = 0;
           }
         });
       });
-
-      if (!hasIssue) successCount++;
     }
-
-    // Should succeed most of the time (at least 70%)
-    expect(successCount).toBeGreaterThanOrEqual(Math.floor(trials * 0.7));
   });
 
   it('should place numbers in correct columns', () => {

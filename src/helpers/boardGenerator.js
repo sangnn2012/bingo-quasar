@@ -1,10 +1,11 @@
 /**
- * Vietnamese Lô Tô Board Generator
+ * Vietnamese Lô Tô Board Generator (Guaranteed Algorithm)
  *
  * Rules:
  * - 90 numbers (1-90) split between 2 boards (45 each)
  * - Each board: 9 rows × 9 columns
  * - Each row: exactly 5 numbers, 4 empty cells
+ * - No 4+ consecutive blank cells in any row
  * - Numbers placed by column based on tens digit:
  *   - Column 0: 1-9    (9 numbers)
  *   - Column 1: 10-19  (10 numbers)
@@ -12,6 +13,9 @@
  *   - ...
  *   - Column 7: 70-79  (10 numbers)
  *   - Column 8: 80-90  (11 numbers)
+ *
+ * This implementation uses backtracking to guarantee valid boards
+ * without needing retries or validation.
  */
 
 // Constants
@@ -20,6 +24,7 @@ export const NUMBERS_PER_ROW = 5;
 export const TOTAL_ROWS = 9;
 export const TOTAL_COLS = 9;
 export const TOTAL_NUMBERS = 90;
+const MAX_CONSECUTIVE_BLANKS = 3;
 
 /**
  * Get the column index for a given number (0-8)
@@ -29,7 +34,7 @@ export const TOTAL_NUMBERS = 90;
 export function getColumnForNumber(num) {
   if (num <= 0 || num > TOTAL_NUMBERS) return -1;
   if (num <= 9) return 0;
-  if (num >= 80) return 8; // 80-90 all go to column 8
+  if (num >= 80) return 8;
   return Math.floor(num / 10);
 }
 
@@ -61,10 +66,6 @@ export function createColumnPools() {
 
 /**
  * Split column pools between two boards
- * Distribution ensures each board gets 45 numbers:
- * - Board1: [5,5,5,5,5,5,5,5,5] = 45
- * - Board2: [4,5,5,5,5,5,5,5,6] = 45
- *
  * @param {Array<Array<number>>} pools - Column pools (9 arrays)
  * @returns {{ board1Pools: Array, board2Pools: Array }}
  */
@@ -76,15 +77,12 @@ export function splitPoolsBetweenBoards(pools) {
     const shuffled = shuffle(pool);
 
     if (colIndex === 0) {
-      // Column 0 has 9 numbers: 5 to board1, 4 to board2
       board1Pools.push(shuffled.slice(0, 5));
       board2Pools.push(shuffled.slice(5));
     } else if (colIndex === 8) {
-      // Column 8 has 11 numbers: 5 to board1, 6 to board2
       board1Pools.push(shuffled.slice(0, 5));
       board2Pools.push(shuffled.slice(5));
     } else {
-      // Columns 1-7 have 10 numbers: 5 to each
       board1Pools.push(shuffled.slice(0, 5));
       board2Pools.push(shuffled.slice(5));
     }
@@ -94,150 +92,154 @@ export function splitPoolsBetweenBoards(pools) {
 }
 
 /**
- * Check if a selection of columns results in 4+ consecutive blank cells
- * @param {Array<number>} selected - Selected column indices
- * @param {number} maxConsecutive - Maximum allowed consecutive blanks (default 3)
- * @returns {boolean} True if there are too many consecutive blanks
+ * Check if a column pattern has 4+ consecutive blanks
+ * @param {Array<number>} columns - Selected column indices (length 5)
+ * @returns {boolean} True if pattern is valid (no 4+ consecutive blanks)
  */
-function hasConsecutiveBlanks(selected, maxConsecutive = 3) {
-  const filled = new Set(selected);
+function isValidPattern(columns) {
+  const filled = new Set(columns);
   let consecutive = 0;
 
   for (let col = 0; col < TOTAL_COLS; col++) {
     if (!filled.has(col)) {
       consecutive++;
-      if (consecutive > maxConsecutive) {
-        return true;
+      if (consecutive > MAX_CONSECUTIVE_BLANKS) {
+        return false;
       }
     } else {
       consecutive = 0;
     }
   }
-  return false;
+  return true;
 }
 
 /**
- * Find columns that would break up consecutive blank runs
- * @param {Array<number>} selected - Currently selected columns
- * @param {Array<number>} available - Available columns to choose from
- * @returns {Array<number>} Columns sorted by priority (gap-breakers first)
+ * Generate all valid 5-column patterns (no 4+ consecutive blanks)
+ * @returns {Array<Array<number>>} Array of valid column patterns
  */
-function prioritizeGapBreakers(selected, available) {
-  const filled = new Set(selected);
+function generateValidPatterns() {
+  const patterns = [];
 
-  // Find where the gaps are
-  const gapPositions = [];
-  let gapStart = -1;
-
-  for (let col = 0; col < TOTAL_COLS; col++) {
-    if (!filled.has(col)) {
-      if (gapStart === -1) gapStart = col;
-    } else {
-      if (gapStart !== -1) {
-        const gapLength = col - gapStart;
-        if (gapLength >= 3) {
-          // Add middle positions of long gaps
-          for (let i = gapStart + 1; i < col - 1; i++) {
-            gapPositions.push(i);
+  // Generate all C(9,5) = 126 combinations
+  for (let a = 0; a < 5; a++) {
+    for (let b = a + 1; b < 6; b++) {
+      for (let c = b + 1; c < 7; c++) {
+        for (let d = c + 1; d < 8; d++) {
+          for (let e = d + 1; e < 9; e++) {
+            const pattern = [a, b, c, d, e];
+            if (isValidPattern(pattern)) {
+              patterns.push(pattern);
+            }
           }
         }
-        gapStart = -1;
       }
     }
   }
 
-  // Check trailing gap
-  if (gapStart !== -1 && TOTAL_COLS - gapStart >= 3) {
-    for (let i = gapStart + 1; i < TOTAL_COLS - 1; i++) {
-      gapPositions.push(i);
+  return patterns;
+}
+
+// Pre-compute valid patterns (computed once at module load)
+const VALID_PATTERNS = generateValidPatterns();
+
+/**
+ * Check if a pattern is feasible given current column counts
+ * @param {Array<number>} pattern - Column pattern to check
+ * @param {Array<number>} remaining - Remaining count per column
+ * @param {number} rowsLeft - Rows remaining to fill
+ * @returns {boolean} True if pattern is feasible
+ */
+function isPatternFeasible(pattern, remaining, rowsLeft) {
+  const patternSet = new Set(pattern);
+
+  for (let col = 0; col < TOTAL_COLS; col++) {
+    if (patternSet.has(col)) {
+      // Pattern uses this column - must have numbers available
+      if (remaining[col] <= 0) return false;
+    } else {
+      // Pattern doesn't use this column - must not be forced to use it
+      // If remaining[col] >= rowsLeft, we MUST use it
+      if (remaining[col] >= rowsLeft) return false;
     }
   }
 
-  // Prioritize columns that break gaps
-  const gapSet = new Set(gapPositions);
-  const gapBreakers = available.filter(col => gapSet.has(col));
-  const others = available.filter(col => !gapSet.has(col));
-
-  return [...shuffle(gapBreakers), ...shuffle(others)];
+  return true;
 }
 
 /**
- * Generate a single board from column pools with randomized blank positions
- *
- * Algorithm:
- * 1. For each row, determine which columns MUST be used (remaining >= rowsLeft)
- * 2. Randomly select from remaining available columns
- * 3. Ensure no 4+ consecutive blank cells in any row
- * 4. Place one number from each selected column
+ * Generate a single board using backtracking algorithm
+ * Guarantees valid board with no 4+ consecutive blanks
  *
  * @param {Array<Array<number>>} columnPools - Numbers available per column
  * @returns {Array<Array<{num: number, tick: boolean}>>} 9x9 board
  */
 export function generateSingleBoard(columnPools) {
-  // Create working copy of pools
   const pools = columnPools.map(pool => [...pool]);
   const remaining = pools.map(pool => pool.length);
 
-  // Initialize empty board
+  // Board state: which columns are filled for each row
+  const rowPatterns = new Array(TOTAL_ROWS).fill(null);
+
+  /**
+   * Backtracking solver
+   * @param {number} row - Current row to fill
+   * @returns {boolean} True if solution found
+   */
+  function solve(row) {
+    if (row === TOTAL_ROWS) {
+      // All rows filled successfully
+      return true;
+    }
+
+    const rowsLeft = TOTAL_ROWS - row;
+
+    // Get feasible patterns for this row
+    const feasiblePatterns = VALID_PATTERNS.filter(pattern =>
+      isPatternFeasible(pattern, remaining, rowsLeft)
+    );
+
+    // Shuffle for randomization
+    const shuffledPatterns = shuffle(feasiblePatterns);
+
+    for (const pattern of shuffledPatterns) {
+      // Apply pattern
+      rowPatterns[row] = pattern;
+      for (const col of pattern) {
+        remaining[col]--;
+      }
+
+      // Recurse
+      if (solve(row + 1)) {
+        return true;
+      }
+
+      // Backtrack
+      for (const col of pattern) {
+        remaining[col]++;
+      }
+      rowPatterns[row] = null;
+    }
+
+    return false;
+  }
+
+  // Solve
+  const success = solve(0);
+
+  if (!success) {
+    // This should never happen with correct pool distribution
+    throw new Error('Failed to generate valid board - this indicates a bug');
+  }
+
+  // Build the board from patterns
   const board = Array.from({ length: TOTAL_ROWS }, () =>
     Array.from({ length: TOTAL_COLS }, () => ({ num: EMPTY, tick: false }))
   );
 
   for (let row = 0; row < TOTAL_ROWS; row++) {
-    const rowsLeft = TOTAL_ROWS - row;
-
-    // Categorize columns
-    const mustPick = []; // Columns that MUST be used (remaining >= rowsLeft)
-    const canPick = [];  // Columns that CAN be used (remaining > 0)
-
-    for (let col = 0; col < TOTAL_COLS; col++) {
-      if (remaining[col] >= rowsLeft) {
-        mustPick.push(col);
-      } else if (remaining[col] > 0) {
-        canPick.push(col);
-      }
-    }
-
-    let selected = [...mustPick];
-
-    // Try to find a selection that avoids 4+ consecutive blanks
-    const maxAttempts = 20;
-    let bestSelection = null;
-
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const trySelected = [...mustPick];
-
-      // Use smart gap-breaking on later attempts
-      const tryCanPick = attempt < 5
-        ? shuffle(canPick)
-        : prioritizeGapBreakers(trySelected, canPick);
-
-      // Fill up to NUMBERS_PER_ROW
-      let canPickIndex = 0;
-      while (trySelected.length < NUMBERS_PER_ROW && canPickIndex < tryCanPick.length) {
-        trySelected.push(tryCanPick[canPickIndex]);
-        canPickIndex++;
-      }
-
-      // Check if this selection avoids consecutive blanks
-      if (!hasConsecutiveBlanks(trySelected)) {
-        bestSelection = trySelected;
-        break;
-      }
-
-      // Keep first attempt as fallback
-      if (attempt === 0) {
-        bestSelection = trySelected;
-      }
-    }
-
-    selected = bestSelection;
-
-    // Place numbers in selected columns
-    for (const col of selected) {
+    for (const col of rowPatterns[row]) {
       const num = pools[col].pop();
       board[row][col] = { num, tick: false };
-      remaining[col]--;
     }
   }
 
@@ -246,14 +248,11 @@ export function generateSingleBoard(columnPools) {
 
 /**
  * Sort numbers within each column across the entire board (ascending top to bottom)
- * This is a traditional Lô Tô requirement for readability
  * @param {Array<Array<{num: number, tick: boolean}>>} board - Board to sort
  * @returns {Array<Array<{num: number, tick: boolean}>>} Sorted board
  */
 export function sortColumnsWithinSections(board) {
-  // For each column across the entire board
   for (let col = 0; col < TOTAL_COLS; col++) {
-    // Collect all numbers and their row positions in this column
     const numbersInColumn = [];
     for (let row = 0; row < TOTAL_ROWS; row++) {
       if (board[row][col].num !== EMPTY) {
@@ -264,13 +263,9 @@ export function sortColumnsWithinSections(board) {
       }
     }
 
-    // Sort numbers ascending
     numbersInColumn.sort((a, b) => a.num - b.num);
-
-    // Get the row positions (sorted by row index)
     const rowPositions = numbersInColumn.map(item => item.row).sort((a, b) => a - b);
 
-    // Place sorted numbers back into sorted row positions
     for (let i = 0; i < numbersInColumn.length; i++) {
       board[rowPositions[i]][col].num = numbersInColumn[i].num;
     }
@@ -295,63 +290,24 @@ export function validateBoard(board) {
 }
 
 /**
- * Check if any row in a board has 4+ consecutive blanks
- * @param {Array<Array<{num: number}>>} board - Board to check
- * @returns {boolean} True if board has no consecutive blank issues
- */
-function hasNoConsecutiveBlankRows(board) {
-  for (const row of board) {
-    let consecutive = 0;
-    for (const cell of row) {
-      if (cell.num === EMPTY) {
-        consecutive++;
-        if (consecutive > 3) return false;
-      } else {
-        consecutive = 0;
-      }
-    }
-  }
-  return true;
-}
-
-/**
- * Generate both Lô Tô boards
+ * Generate both Lô Tô boards (guaranteed valid, no retries needed)
  * @returns {{ board1: Array, board2: Array, isValid: boolean }}
  */
 export function generateBoards() {
-  const maxBoardAttempts = 50;
-
-  for (let attempt = 0; attempt < maxBoardAttempts; attempt++) {
-    // Step 1: Create column pools and shuffle
-    const pools = createColumnPools().map(pool => shuffle(pool));
-
-    // Step 2: Split pools between boards
-    const { board1Pools, board2Pools } = splitPoolsBetweenBoards(pools);
-
-    // Step 3: Generate each board
-    let board1 = generateSingleBoard(board1Pools);
-    let board2 = generateSingleBoard(board2Pools);
-
-    // Step 4: Sort numbers within columns (ascending top to bottom)
-    board1 = sortColumnsWithinSections(board1);
-    board2 = sortColumnsWithinSections(board2);
-
-    // Step 5: Validate structure and consecutive blanks
-    const isValid = validateBoard(board1) && validateBoard(board2);
-    const noConsecBlanks = hasNoConsecutiveBlankRows(board1) && hasNoConsecutiveBlankRows(board2);
-
-    if (isValid && noConsecBlanks) {
-      return { board1, board2, isValid: true };
-    }
-  }
-
-  // Fallback: return last attempt even if not perfect
+  // Step 1: Create column pools and shuffle
   const pools = createColumnPools().map(pool => shuffle(pool));
+
+  // Step 2: Split pools between boards
   const { board1Pools, board2Pools } = splitPoolsBetweenBoards(pools);
+
+  // Step 3: Generate each board using backtracking (guaranteed to succeed)
   let board1 = generateSingleBoard(board1Pools);
   let board2 = generateSingleBoard(board2Pools);
+
+  // Step 4: Sort numbers within columns (ascending top to bottom)
   board1 = sortColumnsWithinSections(board1);
   board2 = sortColumnsWithinSections(board2);
 
-  return { board1, board2, isValid: validateBoard(board1) && validateBoard(board2) };
+  // No validation needed - algorithm guarantees correctness
+  return { board1, board2, isValid: true };
 }
