@@ -117,6 +117,51 @@ function hasConsecutiveBlanks(selected, maxConsecutive = 3) {
 }
 
 /**
+ * Find columns that would break up consecutive blank runs
+ * @param {Array<number>} selected - Currently selected columns
+ * @param {Array<number>} available - Available columns to choose from
+ * @returns {Array<number>} Columns sorted by priority (gap-breakers first)
+ */
+function prioritizeGapBreakers(selected, available) {
+  const filled = new Set(selected);
+
+  // Find where the gaps are
+  const gapPositions = [];
+  let gapStart = -1;
+
+  for (let col = 0; col < TOTAL_COLS; col++) {
+    if (!filled.has(col)) {
+      if (gapStart === -1) gapStart = col;
+    } else {
+      if (gapStart !== -1) {
+        const gapLength = col - gapStart;
+        if (gapLength >= 3) {
+          // Add middle positions of long gaps
+          for (let i = gapStart + 1; i < col - 1; i++) {
+            gapPositions.push(i);
+          }
+        }
+        gapStart = -1;
+      }
+    }
+  }
+
+  // Check trailing gap
+  if (gapStart !== -1 && TOTAL_COLS - gapStart >= 3) {
+    for (let i = gapStart + 1; i < TOTAL_COLS - 1; i++) {
+      gapPositions.push(i);
+    }
+  }
+
+  // Prioritize columns that break gaps
+  const gapSet = new Set(gapPositions);
+  const gapBreakers = available.filter(col => gapSet.has(col));
+  const others = available.filter(col => !gapSet.has(col));
+
+  return [...shuffle(gapBreakers), ...shuffle(others)];
+}
+
+/**
  * Generate a single board from column pools with randomized blank positions
  *
  * Algorithm:
@@ -153,19 +198,19 @@ export function generateSingleBoard(columnPools) {
       }
     }
 
-    // Start with must-pick columns
     let selected = [...mustPick];
 
-    // Shuffle canPick for randomization
-    const shuffledCanPick = shuffle(canPick);
-
     // Try to find a selection that avoids 4+ consecutive blanks
-    const maxAttempts = 10;
+    const maxAttempts = 20;
     let bestSelection = null;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const trySelected = [...mustPick];
-      const tryCanPick = attempt === 0 ? shuffledCanPick : shuffle(canPick);
+
+      // Use smart gap-breaking on later attempts
+      const tryCanPick = attempt < 5
+        ? shuffle(canPick)
+        : prioritizeGapBreakers(trySelected, canPick);
 
       // Fill up to NUMBERS_PER_ROW
       let canPickIndex = 0;
@@ -250,26 +295,63 @@ export function validateBoard(board) {
 }
 
 /**
+ * Check if any row in a board has 4+ consecutive blanks
+ * @param {Array<Array<{num: number}>>} board - Board to check
+ * @returns {boolean} True if board has no consecutive blank issues
+ */
+function hasNoConsecutiveBlankRows(board) {
+  for (const row of board) {
+    let consecutive = 0;
+    for (const cell of row) {
+      if (cell.num === EMPTY) {
+        consecutive++;
+        if (consecutive > 3) return false;
+      } else {
+        consecutive = 0;
+      }
+    }
+  }
+  return true;
+}
+
+/**
  * Generate both Lô Tô boards
  * @returns {{ board1: Array, board2: Array, isValid: boolean }}
  */
 export function generateBoards() {
-  // Step 1: Create column pools and shuffle
+  const maxBoardAttempts = 50;
+
+  for (let attempt = 0; attempt < maxBoardAttempts; attempt++) {
+    // Step 1: Create column pools and shuffle
+    const pools = createColumnPools().map(pool => shuffle(pool));
+
+    // Step 2: Split pools between boards
+    const { board1Pools, board2Pools } = splitPoolsBetweenBoards(pools);
+
+    // Step 3: Generate each board
+    let board1 = generateSingleBoard(board1Pools);
+    let board2 = generateSingleBoard(board2Pools);
+
+    // Step 4: Sort numbers within columns (ascending top to bottom)
+    board1 = sortColumnsWithinSections(board1);
+    board2 = sortColumnsWithinSections(board2);
+
+    // Step 5: Validate structure and consecutive blanks
+    const isValid = validateBoard(board1) && validateBoard(board2);
+    const noConsecBlanks = hasNoConsecutiveBlankRows(board1) && hasNoConsecutiveBlankRows(board2);
+
+    if (isValid && noConsecBlanks) {
+      return { board1, board2, isValid: true };
+    }
+  }
+
+  // Fallback: return last attempt even if not perfect
   const pools = createColumnPools().map(pool => shuffle(pool));
-
-  // Step 2: Split pools between boards
   const { board1Pools, board2Pools } = splitPoolsBetweenBoards(pools);
-
-  // Step 3: Generate each board
   let board1 = generateSingleBoard(board1Pools);
   let board2 = generateSingleBoard(board2Pools);
-
-  // Step 4: Sort numbers within columns (ascending top to bottom in each 3-row section)
   board1 = sortColumnsWithinSections(board1);
   board2 = sortColumnsWithinSections(board2);
 
-  // Step 5: Validate
-  const isValid = validateBoard(board1) && validateBoard(board2);
-
-  return { board1, board2, isValid };
+  return { board1, board2, isValid: validateBoard(board1) && validateBoard(board2) };
 }
