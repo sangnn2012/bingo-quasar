@@ -229,18 +229,18 @@ export default {
     Tile
   },
   mounted() {
+    const MAX_RETRIES = 100;
+    let retries = 0;
+
     this.generate2Board();
 
-    // for (let i = 0; i < this.board1.length; i++) {
-    //   let length = this.board1[i].filter(x => x.num !== -1).length;
-    //   if (length !== 5) {
-    //     this.generate2Board();
-    //   }
-    // }
-
-    while (this.isNotPerfect) {
-      console.log("run");
+    while (this.isNotPerfect && retries < MAX_RETRIES) {
+      retries++;
       this.generate2Board();
+    }
+
+    if (retries >= MAX_RETRIES) {
+      console.warn(`Board generation failed after ${MAX_RETRIES} attempts`);
     }
   },
   data() {
@@ -546,7 +546,8 @@ export default {
 
           for (let k = 0; k < tempArr.length; k++) {
             if (tempArr[k] === -1) continue;
-            let getTens = Math.floor(tempArr[k] / 10);
+            // Fix: cap at 8 for numbers 80-90 (they all go to column 8)
+            let getTens = Math.min(Math.floor(tempArr[k] / 10), 8);
             if (colIndexes.includes(getTens)) {
               board[i][getTens] = tempArr[k];
               tempArr[k] = -1;
@@ -601,13 +602,20 @@ export default {
       return this.board;
     },
     isNotPerfect() {
+      // Check board1
       for (let i = 0; i < this.board1.length; i++) {
         let length = this.board1[i].filter(x => x.num !== -1).length;
         if (length !== 5) {
           return true;
         }
       }
-
+      // Check board2 as well
+      for (let i = 0; i < this.board2.length; i++) {
+        let length = this.board2[i].filter(x => x.num !== -1).length;
+        if (length !== 5) {
+          return true;
+        }
+      }
       return false;
     }
   }
