@@ -223,400 +223,59 @@
 
 <script>
 import Tile from "src/components/Tile/Index.vue";
+import { generateBoards, EMPTY } from "src/helpers/boardGenerator.js";
+
 export default {
   name: "PageIndex",
   components: {
     Tile
   },
+
   mounted() {
-    const MAX_RETRIES = 100;
-    let retries = 0;
-
-    this.generate2Board();
-
-    while (this.isNotPerfect && retries < MAX_RETRIES) {
-      retries++;
-      this.generate2Board();
-    }
-
-    if (retries >= MAX_RETRIES) {
-      console.warn(`Board generation failed after ${MAX_RETRIES} attempts`);
-    }
+    this.initializeBoards();
   },
+
   data() {
     return {
+      // UI settings
       iconList: ["done", "pets", "eco", "bolt", "clear", "sentiment_neutral"],
       mainIcon: "done",
       mainColor: "#fa86c4",
       isIntroModal: true,
-      board1: [
-        [
-          { num: -1 },
-          { num: 18, tick: false },
-          { num: 22, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 55, tick: false },
-          { num: -1 },
-          { num: 76, tick: true },
-          { num: 83, tick: true }
-        ],
-        [
-          { num: -1 },
-          { num: 12, tick: true },
-          { num: -1 },
-          { num: 38, tick: false },
-          { num: 40, tick: false },
-          { num: -1 },
-          { num: 66, tick: true },
-          { num: -1 },
-          { num: 82, tick: false }
-        ],
-        [
-          { num: 1, tick: false },
-          { num: -1 },
-          { num: 27, tick: true },
-          { num: -1 },
-          { num: 42, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 73, tick: false },
-          { num: 85, tick: false }
-        ],
-        [
-          { num: -1 },
-          { num: 18, tick: false },
-          { num: 22, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 55, tick: false },
-          { num: -1 },
-          { num: 76, tick: true },
-          { num: 83, tick: true }
-        ],
-        [
-          { num: -1 },
-          { num: 12, tick: true },
-          { num: -1 },
-          { num: 38, tick: false },
-          { num: 40, tick: false },
-          { num: -1 },
-          { num: 66, tick: true },
-          { num: -1 },
-          { num: 82, tick: false }
-        ],
-        [
-          { num: 1, tick: false },
-          { num: -1 },
-          { num: 27, tick: true },
-          { num: -1 },
-          { num: 42, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 73, tick: false },
-          { num: 85, tick: false }
-        ],
-        [
-          { num: -1 },
-          { num: 18, tick: false },
-          { num: 22, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 55, tick: false },
-          { num: -1 },
-          { num: 76, tick: true },
-          { num: 83, tick: true }
-        ],
-        [
-          { num: -1 },
-          { num: 12, tick: true },
-          { num: -1 },
-          { num: 38, tick: false },
-          { num: 40, tick: false },
-          { num: -1 },
-          { num: 66, tick: true },
-          { num: -1 },
-          { num: 82, tick: false }
-        ],
-        [
-          { num: 1, tick: false },
-          { num: -1 },
-          { num: 27, tick: true },
-          { num: -1 },
-          { num: 42, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 73, tick: false },
-          { num: 85, tick: false }
-        ]
-      ],
-      board2: [
-        [
-          { num: -1 },
-          { num: 18, tick: false },
-          { num: 22, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 55, tick: false },
-          { num: -1 },
-          { num: 76, tick: true },
-          { num: 83, tick: true }
-        ],
-        [
-          { num: -1 },
-          { num: 12, tick: true },
-          { num: -1 },
-          { num: 38, tick: false },
-          { num: 40, tick: false },
-          { num: -1 },
-          { num: 66, tick: true },
-          { num: -1 },
-          { num: 82, tick: false }
-        ],
-        [
-          { num: 1, tick: false },
-          { num: -1 },
-          { num: 27, tick: true },
-          { num: -1 },
-          { num: 42, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 73, tick: false },
-          { num: 85, tick: false }
-        ],
-        [
-          { num: -1 },
-          { num: 18, tick: false },
-          { num: 22, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 55, tick: false },
-          { num: -1 },
-          { num: 76, tick: true },
-          { num: 83, tick: true }
-        ],
-        [
-          { num: -1 },
-          { num: 12, tick: true },
-          { num: -1 },
-          { num: 38, tick: false },
-          { num: 40, tick: false },
-          { num: -1 },
-          { num: 66, tick: true },
-          { num: -1 },
-          { num: 82, tick: false }
-        ],
-        [
-          { num: 1, tick: false },
-          { num: -1 },
-          { num: 27, tick: true },
-          { num: -1 },
-          { num: 42, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 73, tick: false },
-          { num: 85, tick: false }
-        ],
-        [
-          { num: -1 },
-          { num: 18, tick: false },
-          { num: 22, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 55, tick: false },
-          { num: -1 },
-          { num: 76, tick: true },
-          { num: 83, tick: true }
-        ],
-        [
-          { num: -1 },
-          { num: 12, tick: true },
-          { num: -1 },
-          { num: 38, tick: false },
-          { num: 40, tick: false },
-          { num: -1 },
-          { num: 66, tick: true },
-          { num: -1 },
-          { num: 82, tick: false }
-        ],
-        [
-          { num: 1, tick: false },
-          { num: -1 },
-          { num: 27, tick: true },
-          { num: -1 },
-          { num: 42, tick: false },
-          { num: -1 },
-          { num: -1 },
-          { num: 73, tick: false },
-          { num: 85, tick: false }
-        ]
-      ]
+
+      // Game boards (initialized empty, populated in mounted)
+      board1: [],
+      board2: []
     };
   },
+
   methods: {
+    /**
+     * Initialize both game boards using the deterministic algorithm
+     */
+    initializeBoards() {
+      const { board1, board2, isValid } = generateBoards();
+
+      if (!isValid) {
+        console.warn("Board generation produced invalid boards");
+      }
+
+      this.board1 = board1;
+      this.board2 = board2;
+    },
+
+    /**
+     * Handle tile click - toggle the tick state
+     */
     onTileClicked(board, rowIndex, cellIndex) {
       board[rowIndex][cellIndex].tick = !board[rowIndex][cellIndex].tick;
     },
-    generate2Board() {
-      //create an array from 1-90
-      let mainArray = [...Array(90).keys()].map(num => ++num);
-      //shuffle array
-      mainArray = this.$helpers.shuffle(mainArray);
-      //divide into 2 halves
-      const half = Math.round(mainArray.length / 2);
-      const firstHalf = mainArray.splice(0, half);
-      const secondHalf = mainArray.splice(-half);
-      let sortedBoard1 = this.sortBoard(firstHalf);
-      let sortedBoard2 = this.sortBoard(secondHalf);
 
-      sortedBoard1.forEach((row, rowIndex) => {
-        while (row.length < 9) {
-          row.push(-1);
-        }
-        while (row.length > 9) {
-          sortedBoard2[rowIndex].push(row.pop());
-        }
-      });
-
-      sortedBoard2.forEach((row, rowIndex) => {
-        while (row.length < 9) {
-          row.push(-1);
-        }
-        while (row.length > 9) {
-          sortedBoard1[rowIndex].push(row.pop());
-        }
-      });
-
-      //shuffle
-      sortedBoard1 = sortedBoard1.map(row => this.$helpers.shuffle(row));
-      sortedBoard2 = sortedBoard2.map(row => this.$helpers.shuffle(row));
-
-      //transpose
-      this.board1 = this.$helpers.transpose(sortedBoard1);
-      this.board2 = this.$helpers.transpose(sortedBoard2);
-
-      // this.board1 = [
-      //   [3, -1, 28, 38, -1, 54, 62, 72, -1],
-      //   [7, -1, -1, -1, 42, 52, 66, 78, -1],
-      //   [-1, -1, -1, -1, -1, -1, -1, 79, 86],
-      //   [6, 18, 27, 30, -1, 56, 63, -1, 87],
-      //   [-1, 14, -1, 36, -1, -1, -1, 70, 81],
-      //   [-1, -1, 25, -1, 49, 57, 68, 74, -1],
-      //   [-1, 10, 23, -1, -1, 59, 67, 71, -1],
-      //   [2, -1, 24, 34, -1, 58, 65, 75, 90],
-      //   [-1, 12, -1, 33, -1, -1, 61, 73, -1]
-      // ];
-      this.board1 = this.generateSingleBoard(this.board1);
-      this.board2 = this.generateSingleBoard(this.board2);
-    },
-    generateSingleBoard(board) {
-      const tempArr = [];
-      for (let i = 0; i < board.length; i++) {
-        let notEmptyTile = board[i].filter(x => x !== -1).length;
-        if (notEmptyTile === 5) continue;
-        if (notEmptyTile > 5) {
-          for (let j = 0; j < board[0].length; j++) {
-            let temp = board[i][j];
-            if (temp === -1) continue;
-            // cell = -1, shift number downwards in an empty cell
-            board[i][j] = -1;
-            tempArr.push(temp);
-            // check current not empty length, if 5, break
-            let currentLength = board[i].filter(x => x !== -1).length;
-            if (currentLength === 5) break;
-          }
-        }
-      }
-      tempArr.sort((a, b) => a - b);
-
-      //push back to board
-      for (let i = 0; i < board.length; i++) {
-        let notEmptyTile = board[i].filter(x => x !== -1).length;
-        if (notEmptyTile === 5) continue;
-
-        //empty columns indexes
-
-        if (notEmptyTile < 5) {
-          let colIndexes = [];
-          board[i].forEach((x, index) => {
-            if (x === -1) {
-              colIndexes.push(index);
-            }
-          });
-
-          for (let k = 0; k < tempArr.length; k++) {
-            if (tempArr[k] === -1) continue;
-            // Fix: cap at 8 for numbers 80-90 (they all go to column 8)
-            let getTens = Math.min(Math.floor(tempArr[k] / 10), 8);
-            if (colIndexes.includes(getTens)) {
-              board[i][getTens] = tempArr[k];
-              tempArr[k] = -1;
-
-              //remove getTens value from colIndexes
-              let tempIndex = colIndexes.indexOf(getTens);
-              if (tempIndex !== -1) {
-                colIndexes.splice(tempIndex, 1);
-              }
-            }
-
-            let currentLength = board[i].filter(x => x !== -1).length;
-            if (currentLength === 5) break;
-          }
-        }
-      }
-
-      return board.map(row => {
-        return row.map(x => {
-          return { num: x, tick: false };
-        });
-      });
-    },
-    sortBoard(array) {
-      let mainArray = [...array];
-      let firstCol = mainArray.filter(num => num <= 9);
-      let secondCol = mainArray.filter(num => num >= 10 && num <= 19);
-      let thirdCol = mainArray.filter(num => num >= 20 && num <= 29);
-      let fourthCol = mainArray.filter(num => num >= 30 && num <= 39);
-      let fifthCol = mainArray.filter(num => num >= 40 && num <= 49);
-      let sixthCol = mainArray.filter(num => num >= 50 && num <= 59);
-      let senventhCol = mainArray.filter(num => num >= 60 && num <= 69);
-      let eighthCol = mainArray.filter(num => num >= 70 && num <= 79);
-      let ninthCol = mainArray.filter(num => num >= 80 && num <= 90);
-
-      let sortedBoard = [
-        firstCol,
-        secondCol,
-        thirdCol,
-        fourthCol,
-        fifthCol,
-        sixthCol,
-        senventhCol,
-        eighthCol,
-        ninthCol
-      ];
-      return sortedBoard;
-    }
-  },
-  computed: {
-    computedBoard() {
-      return this.board;
-    },
-    isNotPerfect() {
-      // Check board1
-      for (let i = 0; i < this.board1.length; i++) {
-        let length = this.board1[i].filter(x => x.num !== -1).length;
-        if (length !== 5) {
-          return true;
-        }
-      }
-      // Check board2 as well
-      for (let i = 0; i < this.board2.length; i++) {
-        let length = this.board2[i].filter(x => x.num !== -1).length;
-        if (length !== 5) {
-          return true;
-        }
-      }
-      return false;
+    /**
+     * Regenerate new boards (called from UI button)
+     */
+    regenerateBoards() {
+      this.initializeBoards();
     }
   }
 };

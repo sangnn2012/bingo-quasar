@@ -2,9 +2,7 @@ import { configure } from 'quasar/wrappers';
 
 export default configure((/* ctx */) => {
   return {
-    boot: [
-      'helpers'
-    ],
+    boot: [],
 
     css: [
       'app.css'
