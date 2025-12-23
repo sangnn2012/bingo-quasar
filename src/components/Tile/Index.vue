@@ -15,9 +15,7 @@
 <script>
 export default {
   name: "Tile",
-  // mounted() {
-  //   console.log({num, tick})
-  // }
+  emits: ['onTileClicked'],
   props: {
     num: {
       type: Number,

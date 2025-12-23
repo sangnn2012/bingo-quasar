@@ -13,7 +13,6 @@
 
 
     </div>
-    </q-btn>
     <div class="game-wrapper__main">
       <div
         class="row"
