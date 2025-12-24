@@ -13,13 +13,13 @@
       <div class="board-label">Vé 1</div>
       <div
         v-for="(row, rowIndex) of board1"
-        :key="'row' + rowIndex + 'board1'"
+        :key="`board1-row-${rowIndex}`"
         class="row"
         :class="(rowIndex + 1) % 3 === 0 ? 'endOfSection' : ''"
       >
         <Tile
           v-for="(cell, cellIndex) of row"
-          :key="'cell' + rowIndex + cellIndex"
+          :key="`cell-${rowIndex}-${cellIndex}`"
           :num="cell.num"
           :tick="cell.tick"
           :main-color="mainColor"
@@ -36,13 +36,13 @@
 
       <div
         v-for="(row, rowIndex) of board2"
-        :key="'row' + rowIndex + 'board2'"
+        :key="`board2-row-${rowIndex}`"
         class="row"
         :class="(rowIndex + 1) % 3 === 0 ? 'endOfSection' : ''"
       >
         <Tile
           v-for="(cell, cellIndex) of row"
-          :key="'cell' + rowIndex + cellIndex"
+          :key="`cell-${rowIndex}-${cellIndex}`"
           :num="cell.num"
           :tick="cell.tick"
           :main-color="mainColor"
