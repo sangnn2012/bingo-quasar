@@ -3,7 +3,7 @@
     class="tile flex flex-center"
     :style="num === -1 ? `background-color:${mainColor}` : ''"
     :class="num !== -1 ? 'hasNum' : ''"
-    @click="emit('onTileClicked')"
+    @click="emit('click')"
   >
     <div class="num" :class="num !== -1 ? 'hasNum' : ''">
       {{ num }}
@@ -28,7 +28,7 @@ withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  onTileClicked: [];
+  click: [];
 }>();
 </script>
 

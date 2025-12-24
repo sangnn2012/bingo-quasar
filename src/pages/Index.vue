@@ -24,7 +24,7 @@
           :tick="cell.tick"
           :main-color="mainColor"
           :main-icon="mainIcon"
-          @on-tile-clicked="toggleTile(board1, rowIndex, cellIndex)"
+          @click="toggleTile(board1, rowIndex, cellIndex)"
         />
       </div>
 
@@ -47,7 +47,7 @@
           :tick="cell.tick"
           :main-color="mainColor"
           :main-icon="mainIcon"
-          @on-tile-clicked="toggleTile(board2, rowIndex, cellIndex)"
+          @click="toggleTile(board2, rowIndex, cellIndex)"
         />
       </div>
     </div>
