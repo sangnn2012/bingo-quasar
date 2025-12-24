@@ -64,27 +64,44 @@ interface GenerateBoardsResult {
 }
 ```
 
-### Component Structure
+### Project Structure
 
 ```
 src/
-├── pages/Index.vue          # Main game page with color/icon picker dialog
+├── pages/
+│   └── Index.vue                 # Main game page (uses composables)
 ├── components/
-│   └── Tile/Index.vue       # Individual cell (handles display + click to mark)
+│   ├── SettingsDialog/Index.vue  # Color/icon picker dialog (v-model support)
+│   └── Tile/
+│       ├── Index.vue             # Individual cell (display + click to mark)
+│       └── Tile.test.ts          # Component tests
+├── composables/
+│   ├── useGameState.ts           # Board state & tile toggling logic
+│   ├── useGameState.test.ts
+│   ├── useUISettings.ts          # Color, icon, dialog state
+│   └── useUISettings.test.ts
 ├── helpers/
-│   ├── boardGenerator.ts    # Board generation algorithm
+│   ├── boardGenerator.ts         # Board generation algorithm
 │   └── boardGenerator.test.ts
 ├── router/
-│   ├── index.ts             # Router configuration
-│   └── routes.ts            # Route definitions
+│   ├── index.ts                  # Router configuration
+│   └── routes.ts                 # Route definitions
 ├── types/
-│   └── index.ts             # TypeScript type definitions
+│   └── index.ts                  # TypeScript type definitions
 └── layouts/MainLayout.vue
 ```
 
-### Game State
+### Composables
 
-- `board1`, `board2`: 9×9 arrays of `BoardCell` objects
+**`useGameState()`** - Game board management:
+
+- `board1`, `board2`: Reactive 9×9 arrays of `BoardCell`
+- `toggleTile(board, row, col)`: Toggle tick state
+- `initializeBoards()`: Regenerate boards
+
+**`useUISettings()`** - UI customization:
+
 - `mainColor`: Background color for empty cells
-- `mainIcon`: Material icon name for marked cells
-- Clicking a numbered tile toggles its `tick` state
+- `mainIcon`: Material icon for marked cells
+- `isSettingsOpen`: Dialog visibility state
+- `iconList`: Available icon options
