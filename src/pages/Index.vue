@@ -6,7 +6,7 @@
         color="primary"
         label="Chọn lại màu và icon"
         class="q-ma-lg"
-        @click="isIntroModal = true"
+        @click="isSettingsOpen = true"
       />
     </div>
     <div class="game-wrapper__main">
@@ -24,7 +24,7 @@
           :tick="cell.tick"
           :main-color="mainColor"
           :main-icon="mainIcon"
-          @on-tile-clicked="onTileClicked(board1, rowIndex, cellIndex)"
+          @on-tile-clicked="toggleTile(board1, rowIndex, cellIndex)"
         />
       </div>
 
@@ -47,14 +47,14 @@
           :tick="cell.tick"
           :main-color="mainColor"
           :main-icon="mainIcon"
-          @on-tile-clicked="onTileClicked(board2, rowIndex, cellIndex)"
+          @on-tile-clicked="toggleTile(board2, rowIndex, cellIndex)"
         />
       </div>
     </div>
     <div class="game-wrapper__footer">Chúc các bạn CT năm mới vui vẻ - Sang.</div>
 
     <q-dialog
-      v-model="isIntroModal"
+      v-model="isSettingsOpen"
       class="game-wrapper__pickers"
       persistent
       transition-show="scale"
@@ -199,7 +199,7 @@
             unelevated
             class="start-btn"
             icon-right="play_arrow"
-            @click="isIntroModal = false"
+            @click="isSettingsOpen = false"
           />
         </q-card-actions>
       </q-card>
@@ -208,45 +208,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import Tile from 'src/components/Tile/Index.vue';
-import { generateBoards } from 'src/helpers/boardGenerator';
-import type { Board } from 'src/types';
+import { useGameState } from 'src/composables/useGameState';
+import { useUISettings } from 'src/composables/useUISettings';
+
+// Game state
+const { board1, board2, toggleTile } = useGameState();
 
 // UI settings
-const iconList = ['done', 'pets', 'eco', 'bolt', 'clear', 'sentiment_neutral'];
-const mainIcon = ref('done');
-const mainColor = ref('#fa86c4');
-const isIntroModal = ref(true);
-
-// Game boards
-const board1 = ref<Board>([]);
-const board2 = ref<Board>([]);
-
-/**
- * Initialize both game boards using the deterministic algorithm
- */
-function initializeBoards(): void {
-  const result = generateBoards();
-
-  if (!result.isValid) {
-    console.warn('Board generation produced invalid boards');
-  }
-
-  board1.value = result.board1;
-  board2.value = result.board2;
-}
-
-/**
- * Handle tile click - toggle the tick state
- */
-function onTileClicked(board: Board, rowIndex: number, cellIndex: number): void {
-  board[rowIndex][cellIndex].tick = !board[rowIndex][cellIndex].tick;
-}
-
-onMounted(() => {
-  initializeBoards();
-});
+const { mainIcon, mainColor, isSettingsOpen, iconList } = useUISettings();
 </script>
 
 <style lang="scss">
